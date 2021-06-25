@@ -1,0 +1,11 @@
+version: "3.8"
+
+services:
+  app:
+    build: .
+    volumes:
+      - .:/app
+      - /app/.poetry
+    environment:
+      - API_KEY
+      - SECRET_KEY
