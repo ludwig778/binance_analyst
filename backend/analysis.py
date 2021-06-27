@@ -1,40 +1,22 @@
-from datetime import datetime
-
-from backend.constants import NO_DAY, DAY, YEAR
+import numpy as np
 
 
-def get_timeframe(df, timeframe=YEAR, shift=NO_DAY, offset=NO_DAY, update=None):
-    date = datetime.fromtimestamp(df.index[-1].timestamp()) - shift
-    df = df.loc[date - timeframe - offset:date]
-
-    if update:
-        df = update(df)
-
-    return df
+def process_simple_rate_of_return(df):
+    return df.pct_change(1).mean() * len(df)
 
 
-def get_periods(df, period=YEAR, shift=NO_DAY, offset=NO_DAY, update=None):
-    date = datetime.fromtimestamp(df.index[-1].timestamp()) - shift
-    dfs = []
+def process_compound_rate_of_return(df):
+    return (1 + df.pct_change(1).mean()) ** len(df) - 1
 
-    is_first = True
-    while 1:
-        loop_offset = period + offset
-        if is_first:
-            loop_offset += DAY
 
-        period_df = df.loc[date - loop_offset:date]
-        if period_df.empty:
-            break
+def process_log_rate_of_return(df):
+    return np.log(df.pct_change(1).mean() + 1) * len(df)
 
-        if update:
-            period_df = update(period_df)
 
-        # yield period_df #dfs.append(period_df)
-        dfs.append(period_df)
-        date = date - period
-        if is_first:
-            date -= DAY
-            is_first = False
+def process_var(df):
+    # return df.apply(lambda df: np.var(df, ddof=1) * len(df))
+    return df.var() * len(df)
 
-    return dfs[::-1]
+
+def process_std(df):
+    return df.std() * np.sqrt(len(df))

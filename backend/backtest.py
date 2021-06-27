@@ -1,7 +1,6 @@
 from pprint import pprint as pp
 
-from backend.analysis import get_periods, get_timeframe
-from backend.helpers import update_df
+from backend.helpers import get_periods, get_timeframe, update_df
 
 
 class Trade:
