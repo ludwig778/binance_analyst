@@ -1,0 +1,9 @@
+*.py[cod]
+__pycache__/
+
+coverage_html*
+
+.coverage
+.poetry
+.pytest_cache
+.tox
