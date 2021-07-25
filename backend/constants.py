@@ -5,4 +5,4 @@ DAY = timedelta(days=1)
 WEEK = DAY * 7
 MONTH = DAY * 30
 YEAR = DAY * 365
-TODAY = datetime.now()
+TODAY = datetime.now().date()
