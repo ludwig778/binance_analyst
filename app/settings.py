@@ -1,11 +1,17 @@
 from os import environ
+from pathlib import Path
 
-API = "https://api.binance.com"
+from pydantic import BaseModel, Field
 
-CACHE_DIR = "cache_dir"
 
-API_KEY = environ.get("API_KEY")
-SECRET_KEY = environ.get("SECRET_KEY")
+class Settings(BaseModel):
+    API: str = "https://api.binance.com"
 
-assert API_KEY, "API_KEY must be set"
-assert SECRET_KEY, "SECRET_KEY must be set"
+    ROOT_FOLDER: Path = Path(".")
+    CACHE_DIR: str = ROOT_FOLDER / "cache_dir"
+
+    API_KEY: str = Field(repr=False)
+    SECRET_KEY: str = Field(repr=False)
+
+
+settings = Settings(**environ)
