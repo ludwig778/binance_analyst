@@ -1,30 +1,28 @@
-from pprint import pprint as pp
+from dataclasses import dataclass
+from datetime import timedelta
+from typing import Dict, Generator, List, Union
 
+from backend.asset import Asset
 from backend.helpers import get_periods, get_timeframe, update_df
 
 
+@dataclass
 class Trade:
-    def __init__(self, origin, dest, policy=None):
-        self.origin = origin
-        self.dest = dest
-        self.policy = policy
-        self.fee = 0.0
-
-        self.process()
-
-    def show(self):
-        pp(self.__dict__)
-
-    def process(self):
-        pass
+    origin: Asset
+    dest: Asset
+    fee: float = 0.0
 
 
+class TradeDispatcher:
+    pass
+
+
+@dataclass
 class Strategy:
-    def __init__(self, name):
-        self.name = name
+    name: str
 
     def process(self, df):
-        res = (df.pct_change(1).mean() * len(df.index) * 100)
+        res = df.pct_change(1).mean() * len(df.index) * 100
         res.sort_values(inplace=True, ascending=True)
         print(res)
         print(df.columns)
@@ -32,24 +30,21 @@ class Strategy:
         return res
 
 
-class Backtest:
-    def __init__(self, period, timeframe, strategy, policy=None):
-        self.period = period
-        self.timeframe = timeframe
-        self.strategy = strategy
-        self.policy = policy
+@dataclass
+class Config:
+    parameters: Dict[str, Union[str, int, float, Generator[int, None, None]]]
 
-        self.setup()
-        self.show()
 
-    def setup(self, assets=None):
-        self.assets = assets or []
-        self.trades = []
+class StrategyTester:
+    assets: List[Asset]
+    trades: List[Trade]
 
-    def show(self):
-        pp(self.__dict__)
+    period: timedelta
+    timeframe: timedelta
+    strategy: Strategy
+    config: Config
 
-    def process(self, df):
+    def setup(self, df):
         df = get_timeframe(df, timeframe=self.timeframe, update=update_df(perc=100))
 
         for period in get_periods(df, self.period):
