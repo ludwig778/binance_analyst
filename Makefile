@@ -1,10 +1,12 @@
-default: prompt
+ARGS = $(filter-out $@,$(MAKECMDGOALS))
 
-prompt:
-	python3 -m binance
+TEST_ARGS =
+
+
+default: py
 
 py:
-	python3
+	python3 ${ARGS}
 
 sh:
 	bash
@@ -18,17 +20,20 @@ isort:
 piprot:
 	piprot
 
-sure: lint isort piprot
-
-tests:
-	pytest --cov=binance --cov-append --cov-report html:coverage_html -vs
-.PHONY: tests
-
 black:
 	black --line-length 104 .
 
+sure: lint isort piprot black
+
+tests:
+	pytest ${TEST_ARGS}
+.PHONY: tests
+
 cov:
-	pytest --cov=backend --cov-append --cov-report html:coverage_html -vs
+	pytest ${TEST_ARGS} --cov=backend
+
+cov_html:
+	pytest ${TEST_ARGS} --cov=backend --cov-append --cov-report html:coverage_html
 
 clean:
 	rm -rf coverage_html
