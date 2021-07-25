@@ -1,103 +1,52 @@
 from datetime import datetime
 
-import pandas as pd
+from pandas import DataFrame, concat
 
-from backend.asset import Pair
-from backend.commands import load_klines
 from backend.constants import DAY, NO_DAY, YEAR
-from repository.json import json_manager
 
 
-def update_df(perc=None, thresh=None, **kwargs):
+def get_pairs_column_as_dataframes(pairs, column="close"):
+    df = DataFrame()
 
-    def wrapper(df):
-        if perc:
-            rows = len(df)
-            kwargs.setdefault(
-                "thresh",
-                int(rows / (100 / perc))
-            )
-
-        return df.dropna(axis=1, **kwargs)
-
-    return wrapper
-
-
-def get_pairs_df(period="1y", refresh=False):
-    filename = f"df_{period}.json"
-
-    if (
-        not refresh and
-        (
-            df := json_manager.get(filename, is_df=True)
-        ) is not None
-    ):
-        df.index.rename("timestamp", inplace=True)
-
-    else:
-        df = _get_pairs_df()
-
-        json_manager.save(filename, df, is_df=True)
-
-    return df
-
-
-def _get_pairs_df():
-    pairs = Pair.load().values()
-    load_klines(pairs)
-
-    df = pd.DataFrame()
     for pair in pairs:
-        pair_df = (
-            pair
-            .klines_1d[["close"]]
-            .rename(columns={"close": pair.symbol})
-        )
+        pair_df = pair.klines[[column]].rename(columns={column: pair.symbol})
 
-        df = pd.concat([df, pair_df], axis=1)
-
-    # Clean dirty binance data for 1d klines
-    timestamps = [str(d)[:10] for d in df.index]
-    for ts in set(timestamps):
-        if timestamps.count(ts) > 1:
-            for index in df.loc[ts].iloc[1:].index:
-                df.drop(index=index, inplace=True)
+        df = concat([df, pair_df], axis=1)
 
     return df
 
 
-def get_timeframe(df, timeframe=YEAR, shift=NO_DAY, offset=NO_DAY, update=None):
-    date = datetime.fromtimestamp(df.index[-1].timestamp()) - shift
-    df = df.loc[date - timeframe - offset:date]
+def filter_dataframe_columns(df, perc=None, **kwargs):
+    if perc:
+        rows = len(df)
+        kwargs.setdefault("thresh", int(rows / (100 / perc)))
 
-    if update:
-        df = update(df)
+    return df.dropna(axis=1, **kwargs)
+
+
+def trim_dataframe_by_timeframe(df, timeframe=YEAR, offset=NO_DAY, shift=NO_DAY):
+    date = datetime.fromtimestamp(df.index[-1].timestamp()) - shift
+
+    first_date = date - timeframe - offset + DAY
+    if first_date < df.iloc[0].name:
+        return DataFrame()
+
+    df = df.loc[first_date:date]
 
     return df
 
 
-def get_periods(df, period=YEAR, shift=NO_DAY, offset=NO_DAY, update=None):
-    date = datetime.fromtimestamp(df.index[-1].timestamp()) - shift
+def split_dataframe_by_periods(df, periods=YEAR, offset=NO_DAY, shift=NO_DAY):
     dfs = []
 
-    is_first = True
     while 1:
-        loop_offset = period + offset
-        if is_first:
-            loop_offset += DAY
+        period_df = trim_dataframe_by_timeframe(df, timeframe=periods, offset=offset, shift=shift)
 
-        period_df = df.loc[date - loop_offset:date]
         if period_df.empty:
             break
 
-        if update:
-            period_df = update(period_df)
+        dfs.insert(0, period_df)
 
-        # yield period_df #dfs.append(period_df)
-        dfs.append(period_df)
-        date = date - period
-        if is_first:
-            date -= DAY
-            is_first = False
+        shift += periods
 
-    return dfs[::-1]
+    return dfs
