@@ -24,6 +24,12 @@ tests:
 	pytest --cov=binance --cov-append --cov-report html:coverage_html -vs
 .PHONY: tests
 
+black:
+	black --line-length 104 .
+
+cov:
+	pytest --cov=backend --cov-append --cov-report html:coverage_html -vs
+
 clean:
 	rm -rf coverage_html
 	find . -name "*.pyc" -o -name "__pycache__"|xargs rm -rf
