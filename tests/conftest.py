@@ -53,7 +53,7 @@ def prepare_pair_registry(pairs):
     pair_registry.set_pairs({})
 
 
-@fixture
+@fixture(autouse=True)
 def prepare_pair_registry_dataframes(pair_dataframes, monkeypatch):
     def _get_klines(symbol, *args, **kwargs):
         df = pair_dataframes.get(symbol)

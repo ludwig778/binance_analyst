@@ -1,5 +1,3 @@
-from pytest import fixture
-
 from backend.constants import DAY, WEEK, YEAR
 from backend.helpers import (
     filter_dataframe_columns,
@@ -8,11 +6,6 @@ from backend.helpers import (
     trim_dataframe_by_timeframe,
 )
 from tests.utils.pairs import get_pairs
-
-
-@fixture(autouse=True)
-def setup(prepare_pair_registry_dataframes):
-    pass
 
 
 def test_get_pairs_column_as_dataframes(pairs):
