@@ -9,15 +9,6 @@ from backend.binance import binance
 class Account:
     assets: Dict[str, Asset] = field(default_factory=dict)
 
-    def load(self):
-        account_info = binance.get_account_info()
-
-        for asset in account_info.get("balances"):
-            amount = float(asset.get("free"))
-            if amount:
-                name = asset.get("asset")
-                self.assets[name] = Asset(name, amount)
-
     def convert_to(self, asset_name):
         base_asset = Asset(asset_name, 0)
 
@@ -29,3 +20,17 @@ class Account:
                 raise Exception("Couldn't find a way to convert {asset.name} to {asset_name}")
 
         return base_asset
+
+
+def load_account():
+    account_info = binance.get_account_info()
+
+    assets = {}
+    for asset in account_info.get("balances"):
+        amount = float(asset.get("free", 0))
+
+        if amount:
+            name = asset.get("asset")
+            assets[name] = Asset(name, amount)
+
+    return Account(assets=assets)
