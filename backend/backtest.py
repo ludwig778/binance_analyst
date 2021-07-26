@@ -7,32 +7,8 @@ from backend.helpers import get_periods, get_timeframe, update_df
 
 
 @dataclass
-class Trade:
-    origin: Asset
-    dest: Asset
-    fee: float = 0.0
-
-
-class TradeDispatcher:
-    pass
-
-
-@dataclass
-class Strategy:
-    name: str
-
-    def process(self, df):
-        res = df.pct_change(1).mean() * len(df.index) * 100
-        res.sort_values(inplace=True, ascending=True)
-        print(res)
-        print(df.columns)
-        print(df["ETHBTC"].rolling(5).mean())
-        return res
-
-
-@dataclass
 class Config:
-    parameters: Dict[str, Union[str, int, float, Generator[int, None, None]]]
+    parameter_matrix: Dict[str, Union[str, int, float, Generator[int, None, None]]]
 
 
 class StrategyTester:
