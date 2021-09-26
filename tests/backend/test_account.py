@@ -1,5 +1,5 @@
 from backend.account import Account
-from backend.asset import Asset, Pair, pair_registry
+from backend.asset import Asset
 
 
 def test_account():
